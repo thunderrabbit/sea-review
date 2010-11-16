@@ -1,0 +1,19 @@
+4:08am JST Wednesday 17 November 2010 (day 14847)
+
+want to review: FILE pointers, arrays, mysql.h
+
+Task: write mysql API to -c create and -d delete tables, -i insert rows, -s select rows where field = value, and -r remove rows where field = value
+
+allow create for VARCHAR, INT, and ENUM types
+
+log all command lines in an ongoing file. Log all resulting mysql commands in separate dirs/files per command
+
+logging/
+       /all.log
+       /deletes/000000.mysql
+       /deletes/000001.mysql
+       /inserts/000000.mysql
+       /inserts/000001.mysql
+       /creates/000000.mysql
+       /selects/000000.mysql
+       /removes/000000.mysql
