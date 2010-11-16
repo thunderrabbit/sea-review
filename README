@@ -17,3 +17,8 @@ logging/
        /creates/000000.mysql
        /selects/000000.mysql
        /removes/000000.mysql
+
+
+--
+to compile
+gcc mysql.c -o mysql.o `mysql_config --cflags --libs`

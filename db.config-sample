@@ -1,0 +1,4 @@
+#define HOST "hostname"
+#define DATA "database name"
+#define USER "username"
+#define PASS "password"
