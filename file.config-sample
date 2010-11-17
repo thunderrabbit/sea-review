@@ -1,0 +1,1 @@
+#define ARG_LOG "/full/path/to/logs_dir/args.log"
