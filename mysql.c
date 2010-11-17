@@ -108,7 +108,7 @@ int go_do_it(char * query)
 	  if(mysql_query(conn, loaded_query))
 	    {
 	      printf("%s\n",mysql_error(conn));
-	      int errorno;
+	      int errno;
 	      errno = mysql_errno(conn);
 	      mysql_free_result(result);
 	      mysql_close(conn);
@@ -119,25 +119,8 @@ int go_do_it(char * query)
     }
 }
 
-int create_table(int optionsc, char ** optionsv)
-{
-  int i;
-  char query[500];
-  strcpy(query,"CREATE TABLE ");
-
-  for(i = 0; i < optionsc; i++)
-    {
-      if(i == 1)
-	{
-	  strcat(query,"(");
-	}
-      strcat(query, optionsv[i]);
-      strcat(query, " ");
-    }
-  strcat(query,");");
-
-  return go_do_it(query);
-}
+int create_table(int optionsc, char ** optionsv);
+int insert_row(int optionsc, char ** optionsv);
 
 int main(int argc, char **argv)
 {
@@ -151,28 +134,16 @@ int main(int argc, char **argv)
     {
       success = create_table(optionsc, options);
     }
-  exit(0);
+  else if(strcmp(command,"INSERT") == 0)
+    {
+      success = insert_row(optionsc, options);
+    }
+  else if(strcmp(command,"ALTER") == 0)
+    {
+      success = alter_table(optionsc, options);
+    }
 
-//   mysql_query(conn, "ALTER TABLE writers ADD city VARCHAR(70)");
-
-//   row_inserter(conn, "writers", argc, argv);
-
-//   mysql_query(conn, "SELECT * FROM writers");
-//   result = mysql_store_result(conn);
-//
-//   num_fields = mysql_num_fields(result);
-//
-//   while((row = mysql_fetch_row(result)))
-//     {
-//       for(i = 0; i < num_fields; i++)
-//	 {
-//	   printf("%s ", row[i] ? row [i] : "(missing)");
-//	 }
-//       printf("\n");
-//     }
-//
-//   mysql_free_result(result);
-//   mysql_close(conn);
+  return success;
 }
 
 void log_args(int argc, char **argv)
@@ -212,6 +183,18 @@ void get_args(int argc, char **argv)
 	    {
 	    case 'c':
 	      strcpy(command, "CREATE");
+	      break;
+	    case 'i':
+	      strcpy(command, "INSERT");
+	      break;
+	    case 's':
+	      strcpy(command, "SELECT");
+	      break;
+	    case 'a':
+	      strcpy(command, "ALTER");
+	      break;
+	    case 'r':
+	      strcpy(command, "REMOVE");
 	      break;
 	    case 'd':
 	      strcpy(command, "DELETE");
@@ -275,3 +258,55 @@ MYSQL * mysql_connect()
   return conn;
 }
 
+int create_table(int optionsc, char ** optionsv)
+{
+  int i;
+  char query[500];
+  strcpy(query,"CREATE TABLE ");
+
+  for(i = 0; i < optionsc; i++)
+    {
+      if(i == 1)
+	{
+	  strcat(query,"(");
+	}
+      strcat(query, optionsv[i]);
+      strcat(query, " ");
+    }
+  strcat(query,");");
+
+  return go_do_it(query);
+}
+
+int alter_table(int optionsc, char ** optionsv)
+{
+  int i;
+  char query[500];
+  strcpy(query,"ALTER TABLE ");
+
+  for(i = 0; i < optionsc; i++)
+    {
+      strcat(query, optionsv[i]);
+      strcat(query, " ");
+    }
+
+  return go_do_it(query);
+}
+
+int insert_row(int optionsc, char ** optionsv)
+{
+  int i;
+  char query[500];
+  strcpy(query,"INSERT INTO ");
+
+  strcat(query,optionsv[0]);     // table name
+  strcat(query," VALUES (");
+  for(i = 1; i < optionsc; i++)
+    {
+      strcat(query, optionsv[i]);
+      strcat(query, " ");
+    }
+  strcat(query,");");
+
+  return go_do_it(query);
+}
