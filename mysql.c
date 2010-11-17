@@ -13,7 +13,7 @@ MYSQL * mysql_connect();
 int row_inserter(MYSQL * conn, char * table, int fieldsc, char ** fieldsv);
 void log_args(int argc, char **argv);
 void get_args(int argc, char **argv);
-int create_table(MYSQL * conn, int optionsc, char ** optionsv);
+int create_table(int optionsc, char ** optionsv);
 
 char * get_filename()
 {
@@ -99,13 +99,27 @@ int go_do_it(char * query)
     {
       if(strcpy(loaded_query, load_command(filename)))
 	{
-	  puts(loaded_query);
-	  return 1;
+	  MYSQL *conn;
+	  MYSQL_RES *result;
+	  MYSQL_ROW row;
+	  int num_fields, i;
+
+	  conn = mysql_connect();
+	  if(mysql_query(conn, loaded_query))
+	    {
+	      printf("%s\n",mysql_error(conn));
+	      int errorno;
+	      errno = mysql_errno(conn);
+	      mysql_free_result(result);
+	      mysql_close(conn);
+
+	      return errno;
+	    }
 	}
     }
 }
 
-int create_table(MYSQL * conn, int optionsc, char ** optionsv)
+int create_table(int optionsc, char ** optionsv)
 {
   int i;
   char query[500];
@@ -113,55 +127,52 @@ int create_table(MYSQL * conn, int optionsc, char ** optionsv)
 
   for(i = 0; i < optionsc; i++)
     {
-      printf("option[%d] is %s\n", i, optionsv[i]);
+      if(i == 1)
+	{
+	  strcat(query,"(");
+	}
       strcat(query, optionsv[i]);
       strcat(query, " ");
     }
+  strcat(query,");");
 
   return go_do_it(query);
 }
 
 int main(int argc, char **argv)
 {
+  int success;
+
   printf("MySQL client version: %s\n", mysql_get_client_info());
 
-   MYSQL *conn;
-   MYSQL_RES *result;
-   MYSQL_ROW row;
-   int num_fields, success, i;
+  get_args(argc, argv);
 
-   get_args(argc, argv);
+  if(strcmp(command,"CREATE") == 0)
+    {
+      success = create_table(optionsc, options);
+    }
+  exit(0);
 
-   conn = mysql_connect();
-
-   if(strcmp(command,"CREATE") == 0)
-     {
-       success = create_table(conn, optionsc, options);
-     }
-   exit(0);
-   //   auto_inserter(conn);
-
-//   mysql_query(conn, "ALTER TABLE writers MODIFY name VARCHAR(70)");
-//   mysql_query(conn, "ALTER TABLE writers ADD age INT");
 //   mysql_query(conn, "ALTER TABLE writers ADD city VARCHAR(70)");
-   row_inserter(conn, "writers", argc, argv);
 
-   mysql_query(conn, "SELECT * FROM writers");
-   result = mysql_store_result(conn);
+//   row_inserter(conn, "writers", argc, argv);
 
-   num_fields = mysql_num_fields(result);
-
-   while((row = mysql_fetch_row(result)))
-     {
-       for(i = 0; i < num_fields; i++)
-	 {
-	   printf("%s ", row[i] ? row [i] : "(missing)");
-	 }
-       printf("\n");
-     }
-
-   mysql_free_result(result);
-   mysql_close(conn);
+//   mysql_query(conn, "SELECT * FROM writers");
+//   result = mysql_store_result(conn);
+//
+//   num_fields = mysql_num_fields(result);
+//
+//   while((row = mysql_fetch_row(result)))
+//     {
+//       for(i = 0; i < num_fields; i++)
+//	 {
+//	   printf("%s ", row[i] ? row [i] : "(missing)");
+//	 }
+//       printf("\n");
+//     }
+//
+//   mysql_free_result(result);
+//   mysql_close(conn);
 }
 
 void log_args(int argc, char **argv)
