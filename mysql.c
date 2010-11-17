@@ -3,36 +3,142 @@
 #include <mysql/my_global.h>
 #include <mysql/mysql.h>
 #include <string.h>
+#include <sys/stat.h>
 
-char command[20];
-char **options;
-int optionsc;
+char command[20];    // determined by the - switch (e.g. -c, -d, -r, -s)
+char **options;      // command line args after command and not including the - switch
+int optionsc;        // number of options sent  (usually argc - 2)
 
 MYSQL * mysql_connect();
 int row_inserter(MYSQL * conn, char * table, int fieldsc, char ** fieldsv);
 void log_args(int argc, char **argv);
 void get_args(int argc, char **argv);
+int create_table(MYSQL * conn, int optionsc, char ** optionsv);
+
+char * get_filename()
+{
+  char dirname[250];           // the directory
+  char filecount_name[250];     // name of file in directory which hold latest filecount
+  int filecount, i;
+  struct stat buf;
+  char zero_filled_filename[20];
+  FILE * file;
+
+  strcpy(dirname, LOG_DIR);
+  strcat(dirname, command);
+  strcat(dirname, "/");
+
+  strcpy(filecount_name,dirname);
+  strcat(filecount_name,FILECOUNT_NAME);
+
+  i = stat(filecount_name, &buf);
+
+  if(i)
+    {
+      // file DNE
+      filecount = 0;
+    }
+  else
+    {
+      file = fopen(filecount_name,"r");
+      fscanf(file, "%d", &filecount);
+      fclose(file);
+    }
+
+  printf("%d\n",filecount);
+
+  file = fopen(filecount_name,"w");
+  if(file)
+    {
+      fprintf(file,"%d",filecount + 1);
+      fclose(file);
+    }
+
+  sprintf(zero_filled_filename,"%06d",filecount);
+  return(strcat(dirname,zero_filled_filename));
+}
+
+int store_command(char * filename, char * query)
+{
+  FILE * file;
+  file = fopen(filename,"w");
+  if(file)
+    {
+      fprintf(file,"%s\n",query);
+      fclose(file);
+      return 1;
+    }
+  else
+    {
+      return 0;
+    }
+}
+
+char * load_command(char * filename)
+{
+  FILE * file;
+  char query[500];
+  char nothing[1];
+
+  strcpy(nothing,"");
+
+  file = fopen(filename,"r");
+  if(file)
+    {
+      return fgets(query, 500, file);
+    }
+}
+
+int go_do_it(char * query)
+{
+  char loaded_query[500];
+  char filename[350];
+
+  strcpy(filename,get_filename());
+  if(store_command(filename, query))
+    {
+      if(strcpy(loaded_query, load_command(filename)))
+	{
+	  puts(loaded_query);
+	  return 1;
+	}
+    }
+}
+
+int create_table(MYSQL * conn, int optionsc, char ** optionsv)
+{
+  int i;
+  char query[500];
+  strcpy(query,"CREATE TABLE ");
+
+  for(i = 0; i < optionsc; i++)
+    {
+      printf("option[%d] is %s\n", i, optionsv[i]);
+      strcat(query, optionsv[i]);
+      strcat(query, " ");
+    }
+
+  return go_do_it(query);
+}
 
 int main(int argc, char **argv)
 {
-   printf("MySQL client version: %s\n", mysql_get_client_info());
+  printf("MySQL client version: %s\n", mysql_get_client_info());
 
    MYSQL *conn;
    MYSQL_RES *result;
    MYSQL_ROW row;
-   int num_fields, i;
+   int num_fields, success, i;
 
    get_args(argc, argv);
 
-   printf("command is %s\n", command);
-   for(i = 0; i < optionsc; i++)
-     {
-       printf("option[%d] is %s\n", i, options[i]);
-     }
-
-   exit(0);
    conn = mysql_connect();
 
+   if(strcmp(command,"CREATE") == 0)
+     {
+       success = create_table(conn, optionsc, options);
+     }
+   exit(0);
    //   auto_inserter(conn);
 
 //   mysql_query(conn, "ALTER TABLE writers MODIFY name VARCHAR(70)");
