@@ -82,9 +82,6 @@ char * load_command(char * filename)
 {
   FILE * file;
   char query[500];
-  char nothing[1];
-
-  strcpy(nothing,"");
 
   file = fopen(filename,"r");
   if(file)
