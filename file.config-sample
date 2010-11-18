@@ -1,1 +1,4 @@
 #define ARG_LOG "/full/path/to/logs_dir/args.log"
+#define LOG_DIR "/full/path/to/logs_dir/"
+#define FILECOUNT_NAME ".filecount"
+

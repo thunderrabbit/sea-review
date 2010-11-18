@@ -17,19 +17,20 @@ int create_table(int optionsc, char ** optionsv);
 
 char * get_filename()
 {
-  char dirname[250];           // the directory
+  char return_filename[250];    // where we will compose the string for output
   char filecount_name[250];     // name of file in directory which hold latest filecount
   int filecount, i;
   struct stat buf;
-  char zero_filled_filename[20];
+  char zero_filled_filename[10];
+  char * output_string;
   FILE * file;
 
-  strcpy(dirname, LOG_DIR);
-  strcat(dirname, command);
-  strcat(dirname, "/");
+  strcpy(filecount_name, LOG_DIR);                 //   /full/path/to/logs_dir/
+  strcat(filecount_name, command);                 //   /full/path/to/logs_dir/CREATE
+  strcat(filecount_name, "/");
 
-  strcpy(filecount_name,dirname);
-  strcat(filecount_name,FILECOUNT_NAME);
+  strcpy(return_filename,filecount_name);          //   /full/path/to/logs_dir/CREATE/
+  strcat(filecount_name,FILECOUNT_NAME);           //   /full/path/to/logs_dir/CREATE/.filecount
 
   i = stat(filecount_name, &buf);
 
@@ -45,8 +46,6 @@ char * get_filename()
       fclose(file);
     }
 
-  printf("%d\n",filecount);
-
   file = fopen(filecount_name,"w");
   if(file)
     {
@@ -55,7 +54,12 @@ char * get_filename()
     }
 
   sprintf(zero_filled_filename,"%06d",filecount);
-  return(strcat(dirname,zero_filled_filename));
+  strcat(return_filename,zero_filled_filename);
+
+  output_string = malloc(strlen(return_filename) + 1);
+  strcpy(output_string,return_filename);
+
+  return(output_string);
 }
 
 int store_command(char * filename, char * query)
@@ -92,9 +96,9 @@ char * load_command(char * filename)
 int go_do_it(char * query)
 {
   char loaded_query[500];
-  char filename[350];
+  char * filename;
 
-  strcpy(filename,get_filename());
+  filename = get_filename();
   if(store_command(filename, query))
     {
       if(strcpy(loaded_query, load_command(filename)))
@@ -115,8 +119,10 @@ int go_do_it(char * query)
 
 	      return errno;
 	    }
+	  printf("executed command stored in file %s\n",filename);
 	}
     }
+  free(filename);
 }
 
 int create_table(int optionsc, char ** optionsv);
