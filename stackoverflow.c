@@ -24,13 +24,13 @@ int main(int argc, char **argv)
 int get_args_works(int argc, char **argv, char **string)
 {
     *string = get_string(argc, argv);
-    printf("in get_args %p string %s\n",*string,*string);
+    printf("in get_args_works %p string %s\n",*string,*string);
 }
 
 int get_args_broken(int argc, char **argv, char *string)
 {
   string = get_string(argc, argv);
-  printf("in get_args %p string %s\n",string,string);
+  printf("in get_args_broken %p string %s\n",string,string);
 }
 
 char * get_string(int argc, char **argv)
@@ -38,7 +38,7 @@ char * get_string(int argc, char **argv)
   int i;
   char *string;
   string = malloc(40);
-  strcpy(string,"initialized string var");   // placeholder
+  strcpy(string,"-s switch not found below");                // placeholder in case -s switch not found below
 
   for(i = 0; i < argc; i++)
     {
@@ -47,9 +47,9 @@ char * get_string(int argc, char **argv)
 	  switch(argv[i][1])
 	    {
 	    case 's':
-	      free(string);
-	      string = malloc(strlen(argv[++i]) + 1);
-	      strcpy (string,argv[i]);     // what we actually want
+	      free(string);                               // relase above malloc(40) for "-s switch not found below"
+	      string = malloc(strlen(argv[++i]) + 1);     // make room for storing variable
+	      strcpy (string,argv[i]);                    // the argv just after -s
 	      break;
 	    }
 	}
