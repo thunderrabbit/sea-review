@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
-int get_args_works(int, char **, char **);
-int get_args_broken(int, char **, char *);
+void get_args_works(int, char **, char **);
+void get_args_broken(int, char **, char *);
 char *get_string(int, char **);
 
 int main(int argc, char **argv)
@@ -21,13 +21,13 @@ int main(int argc, char **argv)
   free(string_broken);
 }
 
-int get_args_works(int argc, char **argv, char **string)
+void get_args_works(int argc, char **argv, char **string)
 {
     *string = get_string(argc, argv);
     printf("in get_args_works %p string %s\n",*string,*string);
 }
 
-int get_args_broken(int argc, char **argv, char *string)
+void get_args_broken(int argc, char **argv, char *string)
 {
   string = get_string(argc, argv);
   printf("in get_args_broken %p string %s\n",string,string);
